@@ -1,10 +1,12 @@
 const { queryCnpj, getActiveCooldownCount } = require('./cnpjService');
 
 function createBatchProcessor(cnpjs, options = {}) {
+  // Configurações padrão se não definidas
+  if (!options.delay) options.delay = 500;
+  if (!options.batchSize) options.batchSize = 10;
+  if (!options.checkpointInterval) options.checkpointInterval = 50;
+  
   const {
-    delay = 500,
-    batchSize = 10,
-    checkpointInterval = 50, // Salva a cada 50 itens
     onProgress = () => {},
     onComplete = () => {},
     onCheckpoint = () => {}
@@ -12,6 +14,7 @@ function createBatchProcessor(cnpjs, options = {}) {
 
   let isPaused = false;
   let isCancelled = false;
+  let isProcessing = false;
   let currentIndex = 0;
   const results = [];
   let successCount = 0;
@@ -28,8 +31,9 @@ function createBatchProcessor(cnpjs, options = {}) {
 
   function getAdaptiveDelay() {
     const cooldownCount = getActiveCooldownCount();
-    if (cooldownCount === 0) return delay;
-    return delay + (cooldownCount * 500);
+    const baseDelay = options.delay;
+    if (cooldownCount === 0) return baseDelay;
+    return baseDelay + (cooldownCount * 500);
   }
 
   async function processBatch(batch, startIdx) {
@@ -56,28 +60,30 @@ function createBatchProcessor(cnpjs, options = {}) {
 
       currentIndex = startIdx + i + 1;
 
-      onProgress({
-        type: 'progress',
-        current: currentIndex,
-        total: cnpjs.length,
-        success: successCount,
-        errors: errorCount,
-        percentage: Math.round((currentIndex / cnpjs.length) * 100),
-        estimatedTimeRemaining: estimateTimeRemaining(),
-        lastResult: {
-          cnpj: result.cnpj,
-          nome: result.nome || result.razaoSocial || '',
-          status: result.status,
-          api: result.api
-        }
-      });
+      if (!isCancelled) {
+        onProgress({
+          type: 'progress',
+          current: currentIndex,
+          total: cnpjs.length,
+          success: successCount,
+          errors: errorCount,
+          percentage: Math.round((currentIndex / cnpjs.length) * 100),
+          estimatedTimeRemaining: estimateTimeRemaining(),
+          lastResult: {
+            cnpj: result.cnpj,
+            nome: result.nome || result.razaoSocial || '',
+            status: result.status,
+            api: result.api
+          }
+        });
+      }
 
       // Lógica de Checkpoint
-      if (currentIndex % checkpointInterval === 0) {
+      if (!isCancelled && currentIndex % options.checkpointInterval === 0) {
         onCheckpoint(results);
       }
 
-      if (i < batch.length - 1) {
+      if (i < batch.length - 1 && !isCancelled) {
         const currentDelay = getAdaptiveDelay();
         await new Promise(r => setTimeout(r, currentDelay));
       }
@@ -87,24 +93,39 @@ function createBatchProcessor(cnpjs, options = {}) {
   }
 
   async function start() {
-    startTime = Date.now();
-    currentIndex = 0;
-    isPaused = false;
-    isCancelled = false;
+    if (isProcessing) return;
+    isProcessing = true;
+    try {
+      startTime = Date.now();
+      currentIndex = 0;
+      successCount = 0;
+      errorCount = 0;
+      isPaused = false;
+      isCancelled = false;
 
-    for (let i = 0; i < cnpjs.length; i += batchSize) {
-      if (isCancelled) break;
+      for (let i = 0; i < cnpjs.length; i += options.batchSize) {
+        if (isCancelled) break;
 
-      const batch = cnpjs.slice(i, i + batchSize);
-      await processBatch(batch, i);
+        const batch = cnpjs.slice(i, i + options.batchSize);
+        await processBatch(batch, i);
 
-      if (i + batchSize < cnpjs.length && !isCancelled) {
-        const currentDelay = getAdaptiveDelay();
-        await new Promise(r => setTimeout(r, currentDelay));
+        if (i + options.batchSize < cnpjs.length && !isCancelled) {
+          const currentDelay = getAdaptiveDelay();
+          await new Promise(r => setTimeout(r, currentDelay));
+        }
       }
+      
+      if (!isCancelled) {
+        onComplete(results);
+      }
+    } finally {
+      isProcessing = false;
     }
+  }
 
-    onComplete(results);
+  function setOptions(newOptions) {
+    if (newOptions.delay) options.delay = newOptions.delay;
+    if (newOptions.batchSize) options.batchSize = newOptions.batchSize;
   }
 
   function pause() { isPaused = true; }
@@ -112,7 +133,7 @@ function createBatchProcessor(cnpjs, options = {}) {
   function cancel() { isCancelled = true; isPaused = false; }
   function getResults() { return results; }
 
-  return { start, pause, resume, cancel, getResults };
+  return { start, pause, resume, cancel, getResults, setOptions };
 }
 
 module.exports = { createBatchProcessor };

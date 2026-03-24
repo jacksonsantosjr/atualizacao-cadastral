@@ -18,7 +18,8 @@ const AVAILABLE_FIELDS = [
   { id: 'situacao', label: 'Situação Cadastral', category: 'Situação', default: true },
   { id: 'data_situacao', label: 'Data da Situação', category: 'Situação' },
   { id: 'motivo_situacao', label: 'Motivo da Situação', category: 'Situação' },
-
+  
+  { id: 'logradouro_tipo', label: 'Tipo de Logradouro', category: 'Endereço', default: true },
   { id: 'logradouro', label: 'Logradouro', category: 'Endereço', default: true },
   { id: 'numero', label: 'Número', category: 'Endereço', default: true },
   { id: 'complemento', label: 'Complemento', category: 'Endereço' },

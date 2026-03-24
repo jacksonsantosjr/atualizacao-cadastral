@@ -11,6 +11,7 @@ const FIELDS_MAP = {
   nome: 'RAZÃO SOCIAL',
   fantasia: 'NOME FANTASIA',
   natureza_juridica: 'NATUREZA JURÍDICA',
+  logradouro_tipo: 'TIPO LOGRADOURO',
   logradouro: 'LOGRADOURO',
   numero: 'NÚMERO',
   complemento: 'COMPLEMENTO',

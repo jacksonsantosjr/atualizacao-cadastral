@@ -16,6 +16,7 @@ const normalizeCommonFields = (data, apiId) => {
     nome: '',
     fantasia: '',
     natureza_juridica: '',
+    logradouro_tipo: '',
     logradouro: '',
     numero: '',
     complemento: '',
@@ -43,6 +44,7 @@ const normalizeCommonFields = (data, apiId) => {
     fields.nome = data.razao_social || '';
     fields.fantasia = data.nome_fantasia || '';
     fields.natureza_juridica = data.natureza_juridica || '';
+    fields.logradouro_tipo = data.descricao_tipo_logradouro || '';
     fields.logradouro = data.logradouro || '';
     fields.numero = data.numero || '';
     fields.complemento = data.complemento || '';
@@ -68,6 +70,7 @@ const normalizeCommonFields = (data, apiId) => {
     fields.nome = data.razao_social || '';
     fields.fantasia = data.nome_fantasia || '';
     fields.natureza_juridica = data.natureza_juridica || '';
+    fields.logradouro_tipo = data.tipo_logradouro || '';
     fields.logradouro = data.logradouro || '';
     fields.numero = data.numero || '';
     fields.complemento = data.complemento || '';
@@ -93,7 +96,19 @@ const normalizeCommonFields = (data, apiId) => {
     fields.nome = data.nome || '';
     fields.fantasia = data.fantasia || '';
     fields.natureza_juridica = data.natureza_juridica || '';
-    fields.logradouro = data.logradouro || '';
+    
+    // ReceitaWS geralmente combina. Tentativa de extração.
+    if (data.logradouro) {
+      const parts = data.logradouro.split(' ');
+      const commonTypes = ['RUA', 'AVENIDA', 'ALAMEDA', 'ESTRADA', 'TRAVESSA', 'RODOVIA', 'PRACA', 'BECO', 'VIELA'];
+      if (commonTypes.includes(parts[0].toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))) {
+        fields.logradouro_tipo = parts[0];
+        fields.logradouro = parts.slice(1).join(' ');
+      } else {
+        fields.logradouro = data.logradouro;
+      }
+    }
+
     fields.numero = data.numero || '';
     fields.complemento = data.complemento || '';
     fields.cep = data.cep || '';
@@ -109,7 +124,7 @@ const normalizeCommonFields = (data, apiId) => {
     fields.cnae_principal_descricao = data.atividade_principal?.[0]?.text || '';
     fields.capital_social = data.capital_social || '';
     fields.porte = data.porte || '';
-    fields.simples_optante = data.simples ? 'SIM' : 'NÃO'; // ReceitaWS simplifica
+    fields.simples_optante = data.simples ? 'SIM' : 'NÃO';
     fields.mei_optante = 'N/A';
   } else if (apiId === 'cnpja') {
     const address = data.address || {};
@@ -119,6 +134,7 @@ const normalizeCommonFields = (data, apiId) => {
     fields.nome = data.company?.name || '';
     fields.fantasia = data.alias || '';
     fields.natureza_juridica = data.company?.nature || '';
+    fields.logradouro_tipo = address.type || '';
     fields.logradouro = address.street || '';
     fields.numero = address.number || '';
     fields.complemento = address.details || '';

@@ -58,6 +58,13 @@ app.post('/api/start/:sessionId', (req, res) => {
   const session = sessions.get(sessionId);
   if (!session) return res.status(404).json({ error: 'Sessão não encontrada' });
 
+  // EVITA RECRIAR O PROCESSADOR SE JÁ EXISTIR (Evita processos zumbis que duplicam o log)
+  if (session.processor) {
+    session.processor.resume();
+    session.status = 'processing';
+    return res.json({ message: 'Retomado' });
+  }
+
   const { selectedFields = [], delay = 500, batchSize = 10 } = req.body;
   session.selectedFields = selectedFields;
 
@@ -66,7 +73,13 @@ app.post('/api/start/:sessionId', (req, res) => {
     batchSize,
     onProgress: (progress) => {
       const client = sseClients.get(sessionId);
-      if (client) client.write(`data: ${JSON.stringify(progress)}\n\n`);
+      if (client) {
+        try {
+          client.write(`data: ${JSON.stringify(progress)}\n\n`);
+        } catch (err) {
+          console.error('Erro SSE:', err);
+        }
+      }
     },
     onCheckpoint: async (results) => {
       try {
