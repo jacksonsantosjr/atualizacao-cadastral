@@ -63,14 +63,14 @@ const normalizeCommonFields = (data, apiId) => {
     mei_optante: ''
   };
 
-  if (apiId === 'opencnpj_org' || apiId === 'opencnpj_com' || apiId === 'minhareceita') {
+  if (apiId === 'opencnpj_org' || apiId === 'minhareceita' || apiId === 'brasilapi') {
     fields.cnpj = data.cnpj || '';
-    fields.tipo = data.identificador_matriz_filial === 1 ? 'MATRIZ' : (data.descricao_identificador_matriz_filial || '');
+    fields.tipo = data.identificador_matriz_filial === 1 ? 'MATRIZ' : (data.descricao_identificador_matriz_filial || 'FILIAL');
     fields.abertura = data.data_inicio_atividade || '';
     fields.nome = data.razao_social || '';
     fields.fantasia = data.nome_fantasia || '';
     fields.natureza_juridica = data.natureza_juridica || '';
-    fields.logradouro_tipo = data.descricao_tipo_logradouro || '';
+    fields.logradouro_tipo = data.descricao_tipo_de_logradouro || data.descricao_tipo_logradouro || data.tipo_logradouro || '';
     fields.logradouro = data.logradouro || '';
     fields.numero = data.numero || '';
     fields.complemento = data.complemento || '';
@@ -82,39 +82,40 @@ const normalizeCommonFields = (data, apiId) => {
     fields.telefone = data.ddd_telefone_1 ? `${data.ddd_telefone_1} ${data.telefone_1 || ''}`.trim() : (data.telefone || '');
     fields.situacao = data.descricao_situacao_cadastral || '';
     fields.data_situacao = data.data_situacao_cadastral || '';
-    fields.motivo_situacao = data.descricao_motivo_situacao_cadastral || '';
+    fields.motivo_situacao = data.descricao_motivo_situacao_cadastral || data.motivo_situacao_cadastral || '';
     fields.cnae_principal_codigo = data.cnae_fiscal || '';
     fields.cnae_principal_descricao = data.cnae_fiscal_descricao || '';
     fields.capital_social = data.capital_social || '';
     fields.porte = data.porte || '';
     fields.simples_optante = data.opcao_pelo_simples ? 'SIM' : 'NÃO';
     fields.mei_optante = data.opcao_pelo_mei ? 'SIM' : 'NÃO';
-  } else if (apiId === 'brasilapi') {
-    fields.cnpj = data.cnpj || '';
-    fields.tipo = data.identificador_matriz_filial === 1 ? 'MATRIZ' : 'FILIAL';
-    fields.abertura = data.data_inicio_atividade || '';
-    fields.nome = data.razao_social || '';
-    fields.fantasia = data.nome_fantasia || '';
-    fields.natureza_juridica = data.natureza_juridica || '';
-    fields.logradouro_tipo = data.tipo_logradouro || '';
-    fields.logradouro = data.logradouro || '';
-    fields.numero = data.numero || '';
-    fields.complemento = data.complemento || '';
-    fields.cep = data.cep || '';
-    fields.bairro = data.bairro || '';
-    fields.municipio = data.municipio || '';
-    fields.uf = data.uf || '';
-    fields.email = data.email || '';
-    fields.telefone = data.ddd_telefone_1 ? `(${data.ddd_telefone_1}) ${data.telefone_1 || ''}` : '';
-    fields.situacao = data.descricao_situacao_cadastral || '';
-    fields.data_situacao = data.data_situacao_cadastral || '';
-    fields.motivo_situacao = data.motivo_situacao_cadastral || '';
-    fields.cnae_principal_codigo = data.cnae_fiscal || '';
-    fields.cnae_principal_descricao = data.cnae_fiscal_descricao || '';
-    fields.capital_social = data.capital_social || '';
-    fields.porte = data.porte || '';
-    fields.simples_optante = data.opcao_pelo_simples ? 'SIM' : 'NÃO';
-    fields.mei_optante = data.opcao_pelo_mei ? 'SIM' : 'NÃO';
+  } else if (apiId === 'opencnpj_com') {
+    // OpenCNPJ.com (Kitana) usa CamelCase
+    const d = data.data || data; // Pode vir aninhado em .data
+    fields.cnpj = d.cnpj || '';
+    fields.tipo = d.matriz === 'Sim' ? 'MATRIZ' : 'FILIAL';
+    fields.abertura = d.dataInicioAtividades || '';
+    fields.nome = d.razaoSocial || '';
+    fields.fantasia = d.nomeFantasia || '';
+    fields.natureza_juridica = d.naturezaJuridica || '';
+    fields.logradouro = d.logradouro || '';
+    fields.numero = d.numero || '';
+    fields.complemento = d.complemento || '';
+    fields.cep = d.cep || '';
+    fields.bairro = d.bairro || '';
+    fields.municipio = d.municipio || '';
+    fields.uf = d.uf || '';
+    fields.email = d.email || '';
+    fields.telefone = d.telefone || '';
+    fields.situacao = d.situacaoCadastral || '';
+    fields.data_situacao = d.dataSituacaoCadastral || '';
+    fields.motivo_situacao = d.motivoSituacaoCadastral || '';
+    fields.cnae_principal_codigo = d.cnaes?.[0]?.cnae || '';
+    fields.cnae_principal_descricao = d.cnaes?.[0]?.descricao || '';
+    fields.capital_social = d.capitalSocial || '';
+    fields.porte = d.porte || '';
+    fields.simples_optante = d.opcaoSimples === 'S' ? 'SIM' : 'NÃO';
+    fields.mei_optante = d.opcaoMei === 'S' ? 'SIM' : 'NÃO';
   } else if (apiId === 'receitaws') {
     fields.cnpj = data.cnpj || '';
     fields.tipo = data.tipo || '';
