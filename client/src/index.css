@@ -485,12 +485,13 @@ body {
 }
 
 .progress-container {
-  height: 8px;
-  background: var(--color-bg-inner);
-  border-radius: 4px;
+  height: 10px;
+  background: var(--color-bg-tertiary);
+  border-radius: 5px;
   overflow: hidden;
   position: relative;
   border: 1px solid var(--color-border);
+  margin: 1rem 0;
 }
 
 /* Efeito de carregamento global na barra */
@@ -530,12 +531,11 @@ body {
 
 .progress-bar {
   height: 100%;
-  background: var(--color-accent);
-  border-radius: 4px;
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  background: var(--color-bg-accent) !important;
+  border-radius: 5px;
+  transition: width 0.5s ease-in-out;
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .progress-eta {

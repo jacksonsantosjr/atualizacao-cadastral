@@ -335,13 +335,13 @@ function ProgressPanel({ sessionId, totalCnpjs, selectedFields, delay, batchSize
           </div>
         </div>
 
-        <div className="progress-bar-container">
+        <div style={{ margin: '1.5rem 0' }}>
           <div className="progress-bar-header">
-            <span>{status === 'processing' ? 'Consultando APIs...' : (status === 'paused' ? 'Pausado' : 'Finalizando...')}</span>
-            <span>{percentage}%</span>
+            <span className="progress-bar-label">{status === 'processing' ? 'Consultando APIs...' : (status === 'paused' ? 'Pausado' : 'Finalizando...')}</span>
+            <span className="progress-bar-percentage">{percentage}%</span>
           </div>
-          <div className="progress-bar-track">
-            <div className={`progress-bar-fill ${status === 'cancelled' ? 'cancelled' : ''}`} style={{ width: `${percentage}%` }} />
+          <div className="progress-container">
+            <div className={`progress-bar ${status === 'cancelled' ? 'cancelled' : ''}`} style={{ width: `${percentage}%` }} />
           </div>
           {progress?.estimatedTimeRemaining && status === 'processing' && (
             <div className="progress-eta">
