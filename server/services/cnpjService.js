@@ -29,10 +29,26 @@ const STREET_TYPE_MAP = {
   'AL': 'ALAMEDA',
   'AL.': 'ALAMEDA',
   'CALCADA': 'CALÇADA',
-  'CALC': 'CALÇADA'
+  'CALC': 'CALÇADA',
+  'SET': 'SETOR',
+  'SET.': 'SETOR',
+  'QD': 'QUADRA',
+  'QD.': 'QUADRA',
+  'LT': 'LOTE',
+  'LT.': 'LOTE',
+  'CJ': 'CONJUNTO',
+  'CONJ': 'CONJUNTO',
+  'CONJ.': 'CONJUNTO',
+  'V': 'VILA',
+  'V.': 'VILA',
+  'VIL': 'VILA'
 };
 
-const COMMON_TYPES_LIST = ['RUA', 'AVENIDA', 'ALAMEDA', 'ESTRADA', 'TRAVESSA', 'RODOVIA', 'PRACA', 'BECO', 'VIELA', 'CALCADA'];
+const COMMON_TYPES_LIST = [
+  'RUA', 'AVENIDA', 'ALAMEDA', 'ESTRADA', 'TRAVESSA', 'RODOVIA', 'PRACA', 'BECO', 'VIELA', 'CALCADA', 
+  'SETOR', 'QUADRA', 'LOTE', 'AREA', 'CHACARA', 'VIA', 'ESPLANADA', 'LADEIRA', 'CONJUNTO', 'CONDOMINIO', 
+  'GALERIA', 'PATIO', 'ACESSO', 'VEREDA', 'NUCLEO', 'PARQUE', 'CAMINHO', 'VILA', 'VALE', 'DISTRITO'
+];
 
 const normalizeCommonFields = (data, apiId) => {
   const fields = {
@@ -185,7 +201,7 @@ const normalizeCommonFields = (data, apiId) => {
 
       if (fullType) {
         // Se a API não mandou o tipo ou o mandou de forma genérica, atualizamos
-        if (!fields.logradouro_tipo || fields.logradouro_tipo === 'N/A') {
+        if (!fields.logradouro_tipo?.trim() || fields.logradouro_tipo === 'N/A' || fields.logradouro_tipo === 'OUTROS') {
           fields.logradouro_tipo = fullType;
           fields.logradouro = parts.slice(1).join(' '); // Remove o tipo do nome da rua
         }
