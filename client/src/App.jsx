@@ -462,9 +462,18 @@ function DownloadSection({ sessionId, totalCnpjs, stats, onReset }) {
         <p className="download-subtitle">Sua planilha já está pronta com os dados atualizados.</p>
         
         <div className="download-stats-mini">
-          <span><strong>{totalCnpjs.toLocaleString()}</strong> Total</span>
-          <span className="success"><strong>{stats.success.toLocaleString()}</strong> Sucessos</span>
-          <span className="error"><strong>{stats.errors.toLocaleString()}</strong> Erros</span>
+          <div className="stat-chip">
+            <Database size={14} />
+            <span>Total: <strong>{totalCnpjs.toLocaleString()}</strong></span>
+          </div>
+          <div className="stat-chip success">
+            <CheckCircle2 size={14} />
+            <span>Sucessos: <strong>{stats.success.toLocaleString()}</strong></span>
+          </div>
+          <div className="stat-chip error">
+            <AlertCircle size={14} />
+            <span>Erros: <strong>{stats.errors.toLocaleString()}</strong></span>
+          </div>
         </div>
 
         <div className="download-actions">

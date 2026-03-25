@@ -719,6 +719,45 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.download-stats-mini {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.stat-chip strong {
+  color: var(--color-text-primary);
+}
+
+.stat-chip.success {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.stat-chip.success strong { color: #059669; }
+
+.stat-chip.error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.stat-chip.error strong { color: #dc2626; }
+
 .download-stats {
   display: flex;
   justify-content: center;

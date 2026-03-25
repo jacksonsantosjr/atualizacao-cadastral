@@ -8,6 +8,32 @@ const httpsAgent = new https.Agent({ rejectUnauthorized: false });
  * Normaliza os dados de diferentes APIs para um formato interno padrão.
  * Contém todos os 24 campos possíveis identificados.
  */
+/**
+ * Mapa de tradução de abreviações comuns para nomes completos e normalizados.
+ */
+const STREET_TYPE_MAP = {
+  'R': 'RUA',
+  'R.': 'RUA',
+  'AV': 'AVENIDA',
+  'AV.': 'AVENIDA',
+  'ROD': 'RODOVIA',
+  'ROD.': 'RODOVIA',
+  'EST': 'ESTRADA',
+  'ESTR': 'ESTRADA',
+  'EST.': 'ESTRADA',
+  'TRAV': 'TRAVESSA',
+  'TR': 'TRAVESSA',
+  'TR.': 'TRAVESSA',
+  'PR': 'PRAÇA',
+  'PR.': 'PRAÇA',
+  'AL': 'ALAMEDA',
+  'AL.': 'ALAMEDA',
+  'CALCADA': 'CALÇADA',
+  'CALC': 'CALÇADA'
+};
+
+const COMMON_TYPES_LIST = ['RUA', 'AVENIDA', 'ALAMEDA', 'ESTRADA', 'TRAVESSA', 'RODOVIA', 'PRACA', 'BECO', 'VIELA', 'CALCADA'];
+
 const normalizeCommonFields = (data, apiId) => {
   const fields = {
     cnpj: '',
@@ -96,19 +122,7 @@ const normalizeCommonFields = (data, apiId) => {
     fields.nome = data.nome || '';
     fields.fantasia = data.fantasia || '';
     fields.natureza_juridica = data.natureza_juridica || '';
-    
-    // ReceitaWS geralmente combina. Tentativa de extração.
-    if (data.logradouro) {
-      const parts = data.logradouro.split(' ');
-      const commonTypes = ['RUA', 'AVENIDA', 'ALAMEDA', 'ESTRADA', 'TRAVESSA', 'RODOVIA', 'PRACA', 'BECO', 'VIELA'];
-      if (commonTypes.includes(parts[0].toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))) {
-        fields.logradouro_tipo = parts[0];
-        fields.logradouro = parts.slice(1).join(' ');
-      } else {
-        fields.logradouro = data.logradouro;
-      }
-    }
-
+    fields.logradouro = data.logradouro || '';
     fields.numero = data.numero || '';
     fields.complemento = data.complemento || '';
     fields.cep = data.cep || '';
@@ -150,6 +164,32 @@ const normalizeCommonFields = (data, apiId) => {
     fields.cnae_principal_descricao = data.mainActivity?.text || '';
     fields.capital_social = data.company?.equity || '';
     fields.porte = data.company?.size || '';
+  }
+
+  // Pós-processamento Global de Logradouro (Unificação)
+  if (fields.logradouro) {
+    const parts = fields.logradouro.trim().split(/\s+/);
+    if (parts.length > 1) {
+      const firstWordRaw = parts[0];
+      // Normaliza para comparação: sem acentos, maiúscula, sem ponto final
+      const firstWordNorm = firstWordRaw.toUpperCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[.,]/g, "");
+
+      // Verifica se a primeira palavra é um tipo conhecido ou abreviação reconhecida
+      const fullType = STREET_TYPE_MAP[firstWordNorm] || 
+                      STREET_TYPE_MAP[firstWordRaw.toUpperCase()] || // Tenta com o original tbm (ex: R.)
+                      (COMMON_TYPES_LIST.includes(firstWordNorm) ? firstWordNorm : null);
+
+      if (fullType) {
+        // Se a API não mandou o tipo ou o mandou de forma genérica, atualizamos
+        if (!fields.logradouro_tipo || fields.logradouro_tipo === 'N/A') {
+          fields.logradouro_tipo = fullType;
+          fields.logradouro = parts.slice(1).join(' '); // Remove o tipo do nome da rua
+        }
+      }
+    }
   }
 
   return fields;
