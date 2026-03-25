@@ -230,8 +230,10 @@ function ProgressPanel({ sessionId, totalCnpjs, selectedFields, delay, batchSize
   const [progress, setProgress] = useState(null);
   const [status, setStatus] = useState('processing');
   const [logs, setLogs] = useState([]);
+  const [errors, setErrors] = useState([]); // Lista detalhada de erros
   const [showCheckpoint, setShowCheckpoint] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
   const eventSourceRef = useRef(null);
 
   useEffect(() => {
@@ -258,7 +260,13 @@ function ProgressPanel({ sessionId, totalCnpjs, selectedFields, delay, batchSize
           setShowCheckpoint(true);
           setTimeout(() => setShowCheckpoint(false), 3000);
         }
-        setLogs(prev => [{ ...data.lastResult }, ...prev].slice(0, 50));
+        
+        const lastResult = data.lastResult;
+        if (lastResult.status === 'error') {
+          setErrors(prev => [...prev, lastResult]);
+        }
+        
+        setLogs(prev => [{ ...lastResult }, ...prev].slice(0, 50));
       }
     };
     return () => es.close();
@@ -276,6 +284,25 @@ function ProgressPanel({ sessionId, totalCnpjs, selectedFields, delay, batchSize
 
   const handleCancelClick = () => {
     setIsModalOpen(true);
+  };
+
+  const handleRetryErrors = async () => {
+    if (errors.length === 0) return;
+    const cnpjsToRetry = errors.map(e => e.cnpj);
+    try {
+      const res = await fetch(`${API_BASE}/retry/${sessionId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cnpjs: cnpjsToRetry })
+      });
+      if (res.ok) {
+        setErrors([]); // Limpa a lista após re-tentar
+        setIsErrorModalOpen(false);
+        if (status === 'completed') setStatus('processing');
+      }
+    } catch (err) {
+      console.error('Erro ao re-tentar:', err);
+    }
   };
 
   const current = progress?.current || 0;
@@ -298,12 +325,12 @@ function ProgressPanel({ sessionId, totalCnpjs, selectedFields, delay, batchSize
             <div className="stat-value">{totalCnpjs.toLocaleString()}</div>
             <div className="stat-label">Total</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-value success">{progress?.success || 0}</div>
+          <div className="stat-card success">
+            <div className="stat-value">{(progress?.success || 0).toLocaleString()}</div>
             <div className="stat-label">Sucessos</div>
           </div>
-          <div className="stat-card">
-            <div className="stat-value error">{progress?.errors || 0}</div>
+          <div className="stat-card error clickable" onClick={() => setIsErrorModalOpen(true)}>
+            <div className="stat-value">{(progress?.errors || 0).toLocaleString()}</div>
             <div className="stat-label">Erros</div>
           </div>
         </div>
@@ -348,14 +375,6 @@ function ProgressPanel({ sessionId, totalCnpjs, selectedFields, delay, batchSize
           )}
         </div>
 
-        <Modal 
-          isOpen={isModalOpen}
-          title="Confirmar Cancelamento"
-          message="Deseja realmente cancelar o processamento? O progresso atual será salvo automaticamente em um checkpoint."
-          onConfirm={handleConfirmCancel}
-          onCancel={() => setIsModalOpen(false)}
-        />
-
         {logs.length > 0 && (
           <div className="activity-log" style={{ marginTop: '1.5rem' }}>
             {logs.map((log, i) => (
@@ -368,6 +387,67 @@ function ProgressPanel({ sessionId, totalCnpjs, selectedFields, delay, batchSize
             ))}
           </div>
         )}
+
+        <Modal 
+          isOpen={isModalOpen}
+          title="Cancelar Processamento?"
+          message="O progresso atual será interrompido. Você poderá baixar o que já foi salvo no último checkpoint."
+          onConfirm={handleConfirmCancel}
+          onCancel={() => setIsModalOpen(false)}
+        />
+
+        <ErrorModal 
+          isOpen={isErrorModalOpen}
+          errors={errors}
+          onClose={() => setIsErrorModalOpen(false)}
+          onRetry={handleRetryErrors}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ErrorModal({ isOpen, errors, onClose, onRetry }) {
+  if (!isOpen) return null;
+  return (
+    <div className="modal-overlay" style={{ zIndex: 1000 }}>
+      <div className="modal-content fade-in" style={{ maxWidth: '600px', width: '90%' }}>
+        <div className="modal-title">
+          <AlertCircle className="text-danger" size={20} />
+          Lista de Erros ({errors.length.toLocaleString()})
+        </div>
+        <div style={{ maxHeight: '300px', overflowY: 'auto', margin: '1rem 0', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
+          <table className="error-table">
+            <thead>
+              <tr>
+                <th>CNPJ</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {errors.length === 0 ? (
+                <tr>
+                  <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', opacity: 0.5 }}>Nenhum erro registrado.</td>
+                </tr>
+              ) : (
+                errors.map((err, i) => (
+                  <tr key={i}>
+                    <td style={{ whiteSpace: 'nowrap', fontWeight: 'bold' }}>{err.cnpj}</td>
+                    <td className="text-danger">{err.error || 'Erro desconhecido'}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="modal-actions">
+          <button className="btn btn-secondary" onClick={onClose}>Fechar</button>
+          {errors.length > 0 && (
+            <button className="btn btn-primary" onClick={onRetry}>
+              <RefreshCcw size={16} /> Refazer Consulta (Final da Fila)
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

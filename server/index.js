@@ -136,6 +136,22 @@ app.post('/api/resume/:sessionId', (req, res) => {
   } else res.status(404).json({ error: 'Sessão não encontrada' });
 });
 
+app.post('/api/retry/:sessionId', (req, res) => {
+  const session = sessions.get(req.params.sessionId);
+  if (session && session.processor) {
+    const { cnpjs } = req.body;
+    if (!Array.isArray(cnpjs)) return res.status(400).json({ error: 'Lista de CNPJs inválida' });
+    
+    session.processor.addCnpjs(cnpjs);
+    session.totalCnpjs += cnpjs.length;
+    
+    // Se o processador já terminou, reinicia o loop
+    session.processor.start();
+    
+    res.json({ message: 'Novos CNPJs adicionados à fila' });
+  } else res.status(404).json({ error: 'Sessão não encontrada' });
+});
+
 app.post('/api/cancel/:sessionId', (req, res) => {
   const session = sessions.get(req.params.sessionId);
   if (session && session.processor) {

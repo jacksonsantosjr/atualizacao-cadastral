@@ -96,20 +96,18 @@ function createBatchProcessor(cnpjs, options = {}) {
     if (isProcessing) return;
     isProcessing = true;
     try {
-      startTime = Date.now();
-      currentIndex = 0;
-      successCount = 0;
-      errorCount = 0;
+      if (!startTime) startTime = Date.now();
       isPaused = false;
       isCancelled = false;
 
-      for (let i = 0; i < cnpjs.length; i += options.batchSize) {
+      // Loop dinâmico para suportar novos itens adicionados à fila
+      while (currentIndex < cnpjs.length) {
         if (isCancelled) break;
 
-        const batch = cnpjs.slice(i, i + options.batchSize);
-        await processBatch(batch, i);
+        const batch = cnpjs.slice(currentIndex, currentIndex + options.batchSize);
+        await processBatch(batch, currentIndex);
 
-        if (i + options.batchSize < cnpjs.length && !isCancelled) {
+        if (currentIndex < cnpjs.length && !isCancelled) {
           const currentDelay = getAdaptiveDelay();
           await new Promise(r => setTimeout(r, currentDelay));
         }
@@ -133,7 +131,12 @@ function createBatchProcessor(cnpjs, options = {}) {
   function cancel() { isCancelled = true; isPaused = false; }
   function getResults() { return results; }
 
-  return { start, pause, resume, cancel, getResults, setOptions };
+  function addCnpjs(newCnpjs) {
+    // Adiciona ao final da lista original
+    cnpjs.push(...newCnpjs);
+  }
+
+  return { start, pause, resume, cancel, getResults, setOptions, addCnpjs };
 }
 
 module.exports = { createBatchProcessor };
