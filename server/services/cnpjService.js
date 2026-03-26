@@ -355,13 +355,20 @@ async function queryCnpj(rawCnpj) {
       const url = api.buildUrl(cnpj);
       const data = await queryWithRetry(url);
 
-      if (data) {
+      // Se a API retornar 'success: false' no corpo ou dados vazios, desconsideramos o sucesso 200
+      if (data && data.success !== false) {
         const normalized = api.normalize(data);
-        normalized.cnpj = formattedCnpj;
-        normalized.status = 'success';
-        normalized.api = api.name;
-        //console.log(`✅ [${api.name}] ${formattedCnpj} → ${normalized.nome}`);
-        return normalized;
+        
+        // Só aceitamos como sucesso se a Razão Social estiver preenchida
+        if (normalized.nome && normalized.nome.trim() !== '') {
+          normalized.cnpj = formattedCnpj;
+          normalized.status = 'success';
+          normalized.api = api.name;
+          //console.log(`✅ [${api.name}] ${formattedCnpj} → ${normalized.nome}`);
+          return normalized;
+        } else {
+          console.warn(`⚠️  [${api.name}] ${formattedCnpj}: Dados ausentes. Tentando próxima API...`);
+        }
       }
     } catch (err) {
       const status = err.response?.status;
