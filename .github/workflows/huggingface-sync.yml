@@ -8,11 +8,14 @@ jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: true
       - name: Push to hub
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://jacksonsantosjr:$HF_TOKEN@huggingface.co/spaces/jacksonsantosjr/atualizacao-de-cadastro main
+        uses: adityak74/huggingface-sync-action@v0.5.0
+        with:
+          github_repo_id: jacksonsantosjr/atualizacao-cadastral
+          huggingface_repo_id: jacksonsantosjr/atualizacao-de-cadastro
+          repo_type: space
+          huggingface_token: ${{ secrets.HF_TOKEN }}
