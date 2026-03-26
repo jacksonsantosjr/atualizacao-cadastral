@@ -1,4 +1,3 @@
-# Sync-fix-2026
 name: Sync to Hugging Face hub
 on:
   push:
@@ -14,9 +13,7 @@ jobs:
           fetch-depth: 0
           lfs: true
       - name: Push to hub
-        uses: adityak74/huggingface-sync-action@v0.5.0
-        with:
-          github_repo_id: jacksonsantosjr/atualizacao-cadastral
-          huggingface_repo_id: jacksonsantosjr/atualizacao-de-cadastro
-          repo_type: space
-          huggingface_token: ${{ secrets.HF_TOKEN }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git push --force https://jacksonsantosjr:$HF_TOKEN@huggingface.co/spaces/jacksonsantosjr/atualizacao-de-cadastro.git main
