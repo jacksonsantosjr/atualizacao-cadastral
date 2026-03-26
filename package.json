@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "node --watch server/index.js",
+    "dev:server": "node server/index.js",
     "dev:client": "cd client && npm run dev",
     "install:all": "npm install && cd client && npm install"
   },

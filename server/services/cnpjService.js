@@ -359,15 +359,18 @@ async function queryCnpj(rawCnpj) {
       if (data && data.success !== false) {
         const normalized = api.normalize(data);
         
-        // Só aceitamos como sucesso se a Razão Social estiver preenchida
-        if (normalized.nome && normalized.nome.trim() !== '') {
+        // Limpamos caracteres não imprimíveis (zero-width spaces, etc.) que podem burlar o .trim()
+        const cleanName = (normalized.nome || '').replace(/[^\x20-\x7EÀ-ÿ]/g, '').trim();
+
+        // Só aceitamos como sucesso se a Razão Social estiver preenchida e for válida
+        if (cleanName !== '') {
+          normalized.nome = cleanName; // Garante que o nome salvo também esteja limpo
           normalized.cnpj = formattedCnpj;
           normalized.status = 'success';
           normalized.api = api.name;
-          //console.log(`✅ [${api.name}] ${formattedCnpj} → ${normalized.nome}`);
           return normalized;
         } else {
-          console.warn(`⚠️  [${api.name}] ${formattedCnpj}: Dados ausentes. Tentando próxima API...`);
+          console.warn(`⚠️  [${api.name}] ${formattedCnpj}: Dados ausentes ou inválidos. Tentando próxima API...`);
         }
       }
     } catch (err) {
