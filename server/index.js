@@ -8,7 +8,7 @@ const { readCnpjsFromFile, generateOutputFile } = require('./services/xlsxServic
 const { createBatchProcessor } = require('./services/batchProcessor');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 7860;
 
 app.use(cors());
 app.use(express.json());
@@ -25,6 +25,12 @@ const upload = multer({
 
 const sessions = new Map();
 const sseClients = new Map();
+
+// Servir arquivos estáticos do Frontend (React)
+const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+}
 
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   try {
@@ -184,6 +190,17 @@ app.get('/api/download/:sessionId', (req, res) => {
     res.download(fileToDownload, 'atualizacao_cnpj.xlsx');
   } else {
     res.status(404).send('Arquivo não disponível');
+  }
+});
+
+// Catch-all para rotas do React (SPA)
+app.get('*', (req, res) => {
+  const clientDistPath = path.join(__dirname, '..', 'client', 'dist');
+  const indexPath = path.join(clientDistPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.send('🚀 Servidor Ativo! (Aguardando build do Frontend)');
   }
 });
 
