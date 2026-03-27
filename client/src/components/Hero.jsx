@@ -9,12 +9,11 @@ const Hero = ({ onAccess }) => {
           <span>Tecnologia de Dados</span>
         </div>
         <h1 className="hero-title">
-          Atualização Cadastral <br />
+          Consulta Cadastral <br />
           <span className="text-gradient">Inteligente</span>
         </h1>
         <p className="hero-subtitle">
-          Potencialize seu processamento de fornecedores com nossa ferramenta de consulta massiva e resiliente. 
-          Alta precisão com rodízio inteligente de 6 APIs.
+          Consulta massiva e automática de dados de fornecedores com processamento robusto aliado à precisão da inteligência artificial.
         </p>
         <div className="hero-actions">
           <button className="btn btn-primary btn-lg hero-btn" onClick={onAccess}>

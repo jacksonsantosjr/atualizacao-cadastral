@@ -41,7 +41,7 @@ const AVAILABLE_FIELDS = [
   { id: 'mei_optante', label: 'Optante MEI', category: 'Jurídico' },
 ];
 
-function Header({ theme, onToggleTheme }) {
+function Header({ theme, onToggleTheme, onExit }) {
   return (
     <header className="header">
       <div className="header-left">
@@ -51,9 +51,15 @@ function Header({ theme, onToggleTheme }) {
           <div className="header-subtitle">Consulta em massa de CNPJs</div>
         </div>
       </div>
-      <button className="theme-toggle" onClick={onToggleTheme}>
-        {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-      </button>
+      <div className="header-actions">
+        <button className="btn-exit" onClick={onExit} title="Sair para tela inicial">
+          <RefreshCcw size={16} />
+          Sair
+        </button>
+        <button className="theme-toggle" onClick={onToggleTheme}>
+          {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+        </button>
+      </div>
     </header>
   );
 }
@@ -509,21 +515,36 @@ function App() {
     localStorage.setItem('theme', theme); 
   }, [theme]);
 
+  const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light');
+
   const handleFileUploaded = (sid, total, name) => setState({ ...state, stage: 'setup', sessionId: sid, totalCnpjs: total, fileName: name });
   const handleStart = (fields, delay, batchSize) => setState({ ...state, stage: 'processing', fields, delay, batchSize });
   const handleComplete = (stats) => setState({ ...state, stage: 'download', stats });
-  const handleReset = () => setState({ stage: 'upload', sessionId: null, totalCnpjs: 0, fields: [], stats: null, fileName: '' });
+  const handleReset = () => setState({ 
+    stage: 'upload', 
+    sessionId: null, 
+    totalCnpjs: 0, 
+    fields: [], 
+    stats: null, 
+    fileName: '' 
+  });
 
   const handleAccess = () => {
-    const heroEl = document.querySelector('.hero');
-    if (heroEl) heroEl.classList.add('exit');
-    setTimeout(() => setShowHero(false), 800);
+    setShowHero(false);
   };
 
+  const handleExit = () => {
+    handleReset();
+    setShowHero(true);
+  };
+
+  if (showHero) {
+    return <Hero onAccess={handleAccess} />;
+  }
+
   return (
-    <div className="app">
-      {showHero && <Hero onAccess={handleAccess} />}
-      <Header theme={theme} onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} />
+    <div className={`app ${theme}`} data-theme={theme}>
+      <Header theme={theme} onToggleTheme={toggleTheme} onExit={handleExit} />
       <main className="app-main">
         {(state.stage === 'upload' || state.stage === 'setup') && (
           <FileUpload 
