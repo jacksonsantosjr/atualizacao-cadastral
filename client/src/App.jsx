@@ -4,6 +4,7 @@ import {
   Sun, Moon, Settings, Activity, CheckCircle2, XCircle, 
   Clock, AlertCircle, Database, ChevronDown, RefreshCcw, Info, ListChecks
 } from 'lucide-react';
+import Hero from './components/Hero';
 import './index.css';
 
 const API_BASE = 'http://localhost:3001/api';
@@ -491,6 +492,7 @@ function DownloadSection({ sessionId, totalCnpjs, stats, onReset }) {
 
 function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [showHero, setShowHero] = useState(true);
   const [state, setState] = useState({ 
     stage: 'upload', 
     sessionId: null, 
@@ -512,8 +514,15 @@ function App() {
   const handleComplete = (stats) => setState({ ...state, stage: 'download', stats });
   const handleReset = () => setState({ stage: 'upload', sessionId: null, totalCnpjs: 0, fields: [], stats: null, fileName: '' });
 
+  const handleAccess = () => {
+    const heroEl = document.querySelector('.hero');
+    if (heroEl) heroEl.classList.add('exit');
+    setTimeout(() => setShowHero(false), 800);
+  };
+
   return (
     <div className="app">
+      {showHero && <Hero onAccess={handleAccess} />}
       <Header theme={theme} onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} />
       <main className="app-main">
         {(state.stage === 'upload' || state.stage === 'setup') && (
