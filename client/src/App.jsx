@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { 
   Upload, FileSpreadsheet, Play, Pause, Square, Download, 
   Sun, Moon, Settings, Activity, CheckCircle2, XCircle, 
-  Clock, AlertCircle, Database, ChevronDown, RefreshCcw, Info, ListChecks
+  Clock, AlertCircle, Database, ChevronDown, RefreshCcw, Info, ListChecks, LogOut
 } from 'lucide-react';
 import Hero from './components/Hero';
 import './index.css';
@@ -41,7 +41,7 @@ const AVAILABLE_FIELDS = [
   { id: 'mei_optante', label: 'Optante MEI', category: 'Jurídico' },
 ];
 
-function Header({ theme, onToggleTheme, onExit }) {
+function Header({ theme, onToggleTheme, onLogout, showLogout }) {
   return (
     <header className="header">
       <div className="header-left">
@@ -51,11 +51,12 @@ function Header({ theme, onToggleTheme, onExit }) {
           <div className="header-subtitle">Consulta em massa de CNPJs</div>
         </div>
       </div>
-      <div className="header-actions">
-        <button className="btn-exit" onClick={onExit} title="Sair para tela inicial">
-          <RefreshCcw size={16} />
-          Sair
-        </button>
+      <div className="header-right" style={{ display: 'flex', gap: '0.5rem' }}>
+        {showLogout && (
+          <button className="theme-toggle" onClick={onLogout} title="Sair">
+            <LogOut size={18} />
+          </button>
+        )}
         <button className="theme-toggle" onClick={onToggleTheme}>
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         </button>
@@ -515,36 +516,31 @@ function App() {
     localStorage.setItem('theme', theme); 
   }, [theme]);
 
-  const toggleTheme = () => setTheme(t => t === 'light' ? 'dark' : 'light');
-
   const handleFileUploaded = (sid, total, name) => setState({ ...state, stage: 'setup', sessionId: sid, totalCnpjs: total, fileName: name });
   const handleStart = (fields, delay, batchSize) => setState({ ...state, stage: 'processing', fields, delay, batchSize });
   const handleComplete = (stats) => setState({ ...state, stage: 'download', stats });
-  const handleReset = () => setState({ 
-    stage: 'upload', 
-    sessionId: null, 
-    totalCnpjs: 0, 
-    fields: [], 
-    stats: null, 
-    fileName: '' 
-  });
+  const handleReset = () => setState({ stage: 'upload', sessionId: null, totalCnpjs: 0, fields: [], stats: null, fileName: '' });
 
   const handleAccess = () => {
-    setShowHero(false);
+    const heroEl = document.querySelector('.hero');
+    if (heroEl) heroEl.classList.add('exit');
+    setTimeout(() => setShowHero(false), 800);
   };
 
-  const handleExit = () => {
+  const handleLogout = () => {
     handleReset();
     setShowHero(true);
   };
 
-  if (showHero) {
-    return <Hero onAccess={handleAccess} />;
-  }
-
   return (
-    <div className={`app ${theme}`} data-theme={theme}>
-      <Header theme={theme} onToggleTheme={toggleTheme} onExit={handleExit} />
+    <div className="app">
+      {showHero && <Hero onAccess={handleAccess} />}
+      <Header 
+        theme={theme} 
+        onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} 
+        onLogout={handleLogout}
+        showLogout={!showHero}
+      />
       <main className="app-main">
         {(state.stage === 'upload' || state.stage === 'setup') && (
           <FileUpload 
