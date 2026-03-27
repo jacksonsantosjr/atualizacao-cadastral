@@ -204,4 +204,8 @@ app.get('*', (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Servidor em http://localhost:${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor Ativo`);
+  console.log(`📡 Porta: ${PORT}`);
+  console.log(`🏠 Host: 0.0.0.0`);
+});
