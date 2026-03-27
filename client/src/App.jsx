@@ -534,51 +534,56 @@ function App() {
 
   return (
     <div className="app">
-      {showHero && <Hero onAccess={handleAccess} />}
-      <Header 
-        theme={theme} 
-        onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} 
-        onLogout={handleLogout}
-        showLogout={!showHero}
-      />
-      <main className="app-main">
-        {(state.stage === 'upload' || state.stage === 'setup') && (
-          <FileUpload 
-            onFileUploaded={handleFileUploaded} 
-            disabled={state.stage === 'setup'} 
-            uploadedFileInfo={state.stage === 'setup' ? { name: state.fileName, total: state.totalCnpjs } : null}
+      {showHero ? (
+        <Hero onAccess={handleAccess} />
+      ) : (
+        <>
+          <Header 
+            theme={theme} 
+            onToggleTheme={() => setTheme(t => t === 'light' ? 'dark' : 'light')} 
+            onLogout={handleLogout}
+            showLogout={!showHero}
           />
-        )}
-        
-        {state.stage === 'setup' && (
-          <FieldSelector 
-            totalCnpjs={state.totalCnpjs} 
-            onStart={handleStart} 
-            onCancel={handleReset} 
-          />
-        )}
+          <main className="app-main">
+            {(state.stage === 'upload' || state.stage === 'setup') && (
+              <FileUpload 
+                onFileUploaded={handleFileUploaded} 
+                disabled={state.stage === 'setup'} 
+                uploadedFileInfo={state.stage === 'setup' ? { name: state.fileName, total: state.totalCnpjs } : null}
+              />
+            )}
+            
+            {state.stage === 'setup' && (
+              <FieldSelector 
+                totalCnpjs={state.totalCnpjs} 
+                onStart={handleStart} 
+                onCancel={handleReset} 
+              />
+            )}
 
-        {state.stage === 'processing' && (
-          <ProgressPanel 
-            sessionId={state.sessionId} 
-            totalCnpjs={state.totalCnpjs} 
-            selectedFields={state.fields} 
-            delay={state.delay} 
-            batchSize={state.batchSize} 
-            onComplete={handleComplete} 
-            onReset={handleReset} 
-          />
-        )}
+            {state.stage === 'processing' && (
+              <ProgressPanel 
+                sessionId={state.sessionId} 
+                totalCnpjs={state.totalCnpjs} 
+                selectedFields={state.fields} 
+                delay={state.delay} 
+                batchSize={state.batchSize} 
+                onComplete={handleComplete} 
+                onReset={handleReset} 
+              />
+            )}
 
-        {state.stage === 'download' && (
-          <DownloadSection 
-            sessionId={state.sessionId} 
-            totalCnpjs={state.totalCnpjs} 
-            stats={state.stats} 
-            onReset={handleReset} 
-          />
-        )}
-      </main>
+            {state.stage === 'download' && (
+              <DownloadSection 
+                sessionId={state.sessionId} 
+                totalCnpjs={state.totalCnpjs} 
+                stats={state.stats} 
+                onReset={handleReset} 
+              />
+            )}
+          </main>
+        </>
+      )}
     </div>
   );
 }
